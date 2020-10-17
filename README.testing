@@ -1,0 +1,5 @@
+I have added a new mode #6 to ./ranluxpp_test which will output stream of 64-bits random numbers.
+It can be used to feed the output to Practrand for empirical testing.
+
+time ./ranluxpp_test 6 >(PractRand-RNG_test stdin64 -tlmax 4G)
+time ./ranluxpp_test 6 >(PractRand-RNG_test stdin64 -tlmax 4G -multithreaded)

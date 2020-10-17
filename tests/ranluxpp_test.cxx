@@ -24,8 +24,11 @@
 #include "ranlux.h"
 #include "cpuarch.h"
 #include <stdio.h>
+#include <string.h>
 #include <typeinfo>
 #include <cxxabi.h>
+#include <signal.h>
+#include <inttypes.h>
 
 // test the performance by summing up 10^9 float numbers
 // note the sum is always 2^24=16777216 for floats due to rounding errors
@@ -56,6 +59,47 @@ void speedtest_array(){
     for(int i=0;i<M;i++) sum += xs[i];
   }
   printf("sum=%lf\n", (double)(sum));
+}
+
+void output_to_stdout(const char * filename) {
+
+  signal(SIGPIPE, SIG_IGN); 
+
+  FILE * stream;
+  stream = fopen (filename,"w");
+  if ( !stream ) {
+    perror("Error on fopen");
+    return;
+  }
+
+  ranluxpp g1(3124);
+  const int steps = 1024;
+  const double giga=1073741824;
+  const size_t N = 9 * steps;
+  uint64_t *buf = new uint64_t[N];
+  uint64_t *p = buf;
+  size_t rc;
+  uint64_t total=0;
+
+  for(;;) {
+    p=buf;
+    for (int i=0;i<steps;++i) {
+      g1.nextstate();
+      memcpy(p, g1.getstate(), 9*sizeof(uint64_t));
+      p+=9;
+    }
+    rc = fwrite(buf, sizeof(uint64_t), N, stream);
+    total += rc;
+    if ( rc < N ) {
+      perror("fwrite");
+      fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n",
+            rc * sizeof(uint64_t), N * sizeof(uint64_t));
+      fprintf(stderr, "Total bytes written %" PRIu64 ", %g GiB\n", total*sizeof(uint64_t),(double)(total*sizeof(uint64_t))/giga );
+      delete[] buf;
+      return;
+    }
+  }
+
 }
 
 // print 9*64 bit number
@@ -165,10 +209,11 @@ void usage(int argc, char **argv){
   printf("         3 -- sum of 10^9 double random numbers\n");
   printf("         4 -- sum of 10^9 float random numbers (array)\n");
   printf("         5 -- sum of 10^9 double random numbers (array)\n");
+  printf("         6 -- output sttream of 64-bit random numbers. Filename required.\n");
 }
 
 int main(int argc, char **argv){
-  if(argc==1||argc>2) { usage(argc,argv); return 0;}
+  if(argc==1||argc>3) { usage(argc,argv); return 0;}
 
   int ntest = atoi(argv[1]);
   printf("Selected code path is optimized for the %s CPU architecture.\n",getarch());
@@ -184,6 +229,9 @@ int main(int argc, char **argv){
     speedtest_array<float>();
   } else if(ntest == 5){
     speedtest_array<double>();
+  } else if(ntest == 6){
+    if (argc !=3)  { usage(argc,argv); return 0;}
+    output_to_stdout(argv[2]);
   } else {
     usage(argc,argv);
   }
