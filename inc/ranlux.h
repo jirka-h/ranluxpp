@@ -55,6 +55,17 @@ public:
   void getstate(uint32_t *x, uint32_t &c){
     for(int i=0;i<24;i++) x[i] = _x[i]; c = _c;
   }
+  void nextstate_and_get_uint32_vector(uint32_t *x){
+    int j;
+    nextstate(_p);
+    j=0;
+    for(int i=0;i<18;i+=3) {
+      x[i]   = (_x[j]<<8)    | (_x[j+1]>>16);
+      x[i+1] = (_x[j+1]<<16) | (_x[j+2]>>8);
+      x[i+2] = (_x[j+2]<<24) | (_x[j+3]);
+      j+=4;
+    }
+  }
 };
 
 class ranluxI_SSE {

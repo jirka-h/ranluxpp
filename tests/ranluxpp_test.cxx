@@ -61,7 +61,7 @@ void speedtest_array(){
   printf("sum=%lf\n", (double)(sum));
 }
 
-void output_to_stdout(const char * filename) {
+void output_to_file(const char * filename) {
 
   signal(SIGPIPE, SIG_IGN); 
 
@@ -209,7 +209,8 @@ void usage(int argc, char **argv){
   printf("         3 -- sum of 10^9 double random numbers\n");
   printf("         4 -- sum of 10^9 float random numbers (array)\n");
   printf("         5 -- sum of 10^9 double random numbers (array)\n");
-  printf("         6 -- output sttream of 64-bit random numbers. Filename required.\n");
+  printf("         6 -- output stream of 64-bit random numbers. Filename required.\n");
+  printf("              Example: %s 6 >(PractRand-RNG_test stdin64 -tlmax 32T -multithreaded)\n", argv[0]);
 }
 
 int main(int argc, char **argv){
@@ -231,7 +232,7 @@ int main(int argc, char **argv){
     speedtest_array<double>();
   } else if(ntest == 6){
     if (argc !=3)  { usage(argc,argv); return 0;}
-    output_to_stdout(argv[2]);
+    output_to_file(argv[2]);
   } else {
     usage(argc,argv);
   }

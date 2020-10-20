@@ -22,6 +22,9 @@
 
 #include "ranlux.h"
 #include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <inttypes.h>
 
 // test the performance by summing up 10^9 float numbers
 // note the sum is always 2^24=16777216 due to rounding errors
@@ -122,6 +125,50 @@ void original_test(){
   printf("  Next and 200th numbers are: %10.6f %10.6f\n",rvec[0],rvec[199]);
 }
 
+void output_to_file(const char * filename) {
+
+  signal(SIGPIPE, SIG_IGN); 
+
+  FILE * stream;
+  stream = fopen (filename,"w");
+  if ( !stream ) {
+    perror("Error on fopen");
+    return;
+  }
+
+  ranluxI_scalar g1(3124);
+  const int steps = 2048;
+  const double giga=1073741824;
+//from 24 24bits integers we can get 24*24/32=18 32-bits integers
+  const size_t word_size = 18;
+  uint32_t *state = new uint32_t[word_size];
+  const size_t N = word_size * steps;
+  uint32_t *buf = new uint32_t[N];
+
+  uint32_t *p = buf;
+  size_t rc;
+  uint64_t total=0;
+
+  for(;;) {
+    p=buf;
+    for (int i=0;i<steps;++i) {
+      g1.nextstate_and_get_uint32_vector(state);
+      memcpy(p, state, word_size*sizeof(uint32_t));
+      p+=word_size;
+    }
+    rc = fwrite(buf, sizeof(uint32_t), N, stream);
+    total += rc;
+    if ( rc < N ) {
+      perror("fwrite");
+      fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n",
+            rc * sizeof(uint64_t), N * sizeof(uint64_t));
+      fprintf(stderr, "Total bytes written %" PRIu64 ", %g GiB\n", total*sizeof(uint64_t),(double)(total*sizeof(uint64_t))/giga );
+      delete[] buf;
+      return;
+    }
+  }
+}
+
 void usage(int argc, char **argv){
   printf("Program to test the performance of the optimized RANLUX implementations (with skipping).\n");
   printf("Usage: %s ntest\n",argv[0]);
@@ -136,10 +183,12 @@ void usage(int argc, char **argv){
   printf("         7 -- same seed for SIMD generators (consistency check)\n");
   printf("         8 -- perform self consistency test using LCG as a skipping engine\n");
   printf("              (random numbers are the same as in the original FORTRAN code)\n");
+  printf("         9 -- output stream of 64-bit random numbers. Filename required.\n");
+  printf("              Example: %s 6 >(PractRand-RNG_test stdin32 -tlmax 32T -multithreaded)\n", argv[0]);
 }
 
 int main(int argc, char **argv){
-  if(argc==1||argc>2) { usage(argc,argv); return 0;}
+  if(argc==1||argc>3) { usage(argc,argv); return 0;}
 
   int ntest = atoi(argv[1]);
   if ( ntest == 0 ){
@@ -164,6 +213,9 @@ int main(int argc, char **argv){
     test_sameseed();
   } else if(ntest == 8){
     original_test<ranluxpp_James>();
+  } else if(ntest == 9){
+    if (argc !=3)  { usage(argc,argv); return 0;}
+    output_to_file(argv[2]);
   } else {
     usage(argc,argv);
   }
