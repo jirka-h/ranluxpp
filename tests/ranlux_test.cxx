@@ -161,8 +161,8 @@ void output_to_file(const char * filename) {
     if ( rc < N ) {
       perror("fwrite");
       fprintf(stderr, "ERROR: fwrite - bytes written %zu, bytes to write %zu\n",
-            rc * sizeof(uint64_t), N * sizeof(uint64_t));
-      fprintf(stderr, "Total bytes written %" PRIu64 ", %g GiB\n", total*sizeof(uint64_t),(double)(total*sizeof(uint64_t))/giga );
+            rc * sizeof(uint32_t), N * sizeof(uint32_t));
+      fprintf(stderr, "Total bytes written %" PRIu64 ", %g GiB\n", total*sizeof(uint32_t),(double)(total*sizeof(uint32_t))/giga );
       delete[] buf;
       return;
     }
