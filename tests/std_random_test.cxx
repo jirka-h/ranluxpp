@@ -54,6 +54,7 @@ void speedtest(const char *name) {
 }
 
 void usage(int argc, char **argv){
+  (void) argc;
   printf("Standard C++11 generator performance test: sum up 10^9 random numbers in a loop.\n");
   printf("usage: %s ntest\n",argv[0]);
   printf("  ntest: 0 -- std::minstd_rand to produce floats with 24 random bits in mantissa.\n");
@@ -74,7 +75,8 @@ void usage(int argc, char **argv){
 
 int main(int argc, char **argv){
   if ( argc==1 || argc>2 ) { usage(argc,argv); return 0;}
-  int itest = -1, lux = 0;
+  int itest = -1;
+  //int lux = 0;
   if(argc>1) itest = atoi(argv[1]);
   switch(itest){
   case 0: speedtest<std::minstd_rand,float,24>("std::minstd_rand"); break;
