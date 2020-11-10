@@ -25,17 +25,23 @@
 #include <string.h>
 #include <signal.h>
 #include <inttypes.h>
+#include <chrono>
+using namespace std::chrono;
 
-// test the performance by summing up 10^9 float numbers
-// note the sum is always 2^24=16777216 due to rounding errors
+// time generation of 2 10^9 random numbers
 template<class T>
 void speedtest(){
   T g1(3124);
-  int N = 1000*1000*1000;
-  float sum = 0;
-  printf("Summing up %d random floats...\n",N);
-  for(int i=0;i<N;i++) sum += g1();
-  printf("sum=%lf\n", (double)(sum));
+  size_t N = 2;
+  N = N * 1000 *1000 *1000;
+  float x;
+  auto start = high_resolution_clock::now();
+  for(size_t i=0;i<N;i++) x = g1();
+  auto end = high_resolution_clock::now();
+  std::chrono::duration<double> diff = end-start;
+  printf("Time to generate %g GiB is %g s, speed is %g MiB/s, last generated number is %g\n",
+      ((double) N * 3.0)/1024.0/1024.0/1024.0, diff.count(),
+      ((double) N * 3.0)/1024.0/1024.0/diff.count(), x);
 }
 
 // test the performance by skipping 10^9 states without actual
@@ -57,20 +63,23 @@ void test_sameseed(){
   printf("Skipping %d states (scalar) ...\n",N*M);
   for(int i=0;i<N;i++) g1.nextstate(M);
   printf("Done.\n");
-  for(int i=0;i<24;i++) printf("%f ", g1()); printf("\n\n");
+  for(int i=0;i<24;i++) printf("%f ", g1());
+  printf("\n\n");
 
   ranluxI_SSE g2(3124); g2.init(3124,1);
   printf("Skipping %d states (SSE2) ...\n",N*M);
   for(int i=0;i<N;i++) g2.nextstate(M);
   printf("Done.\n");
-  for(int i=0;i<4*24;i++) printf("%f ", g2()); printf("\n\n");
+  for(int i=0;i<4*24;i++) printf("%f ", g2());
+  printf("\n\n");
 
 #ifdef __AVX2__
   ranluxI_AVX g3(3124); g3.init(3124,1);
   printf("Skipping %d states (AVX2) ...\n",N*M);
   for(int i=0;i<N;i++) g3.nextstate(M);
   printf("Done.\n");
-  for(int i=0;i<8*24;i++) printf("%f ", g3()); printf("\n\n");
+  for(int i=0;i<8*24;i++) printf("%f ", g3());
+  printf("\n\n");
 #endif
 }
 
@@ -84,10 +93,14 @@ void original_test(){
 
   auto print = [&](const char *title, const char *luxury){
     printf("  %s\n",title);
-    a.ranlux(rvec,100); printf(" RANLUX %s   1-  5:\n",luxury);
-    for(int i=0;i<5;i++) printf("%10.8f ",rvec[i]); printf("\n");
-    a.ranlux(rvec,100); printf(" RANLUX %s 101-105:\n",luxury);
-    for(int i=0;i<5;i++) printf("%10.8f ",rvec[i]); printf("\n");
+    a.ranlux(rvec,100);
+    printf(" RANLUX %s   1-  5:\n",luxury);
+    for(int i=0;i<5;i++) printf("%10.8f ",rvec[i]);
+    printf("\n");
+    a.ranlux(rvec,100);
+    printf(" RANLUX %s 101-105:\n",luxury);
+    for(int i=0;i<5;i++) printf("%10.8f ",rvec[i]);
+    printf("\n");
   };
 
   print(" CALL RANLUX(RVEC,100)","default numbers");
@@ -125,6 +138,7 @@ void original_test(){
   printf("  Next and 200th numbers are: %10.6f %10.6f\n",rvec[0],rvec[199]);
 }
 
+template<typename T>
 void output_to_file(const char * filename) {
 
   signal(SIGPIPE, SIG_IGN); 
@@ -136,11 +150,17 @@ void output_to_file(const char * filename) {
     return;
   }
 
-  ranluxI_scalar g1(3124);
+  T g1(3124);
   const int steps = 2048;
   const double giga=1073741824;
+  size_t word_size;
 //from 24 24bits integers we can get 24*24/32=18 32-bits integers
-  const size_t word_size = 18;
+  if (std::is_same<ranluxI_scalar, T>::value) word_size = 18;
+//from 4x24 24bits integers we can get 4*24*24/32=72 32-bits integers
+  if (std::is_same<ranluxI_SSE, T>::value) word_size = 72;
+//from 8x24 24bits integers we can get 8*24*24/32=72 32-bits integers
+  if (std::is_same<ranluxI_AVX, T>::value) word_size = 144;
+
   uint32_t *state = new uint32_t[word_size];
   const size_t N = word_size * steps;
   uint32_t *buf = new uint32_t[N];
@@ -170,21 +190,24 @@ void output_to_file(const char * filename) {
 }
 
 void usage(int argc, char **argv){
+  (void) argc;
   printf("Program to test the performance of the optimized RANLUX implementations (with skipping).\n");
   printf("Usage: %s ntest\n",argv[0]);
   printf("  ntest: 0 -- perform self consistency test\n");
   printf("              (random numbers are the same as in the original FORTRAN code)\n");
-  printf("         1 -- sum of 10^9 float random numbers with the scalar skipping\n");
-  printf("         2 -- sum of 10^9 float random numbers with the SSE2 skipping\n");
-  printf("         3 -- sum of 10^9 float random numbers with the AVX2 skipping\n");
+  printf("         1 -- time generation of 2 10^9 random numbers with the scalar skipping\n");
+  printf("         2 -- time generation of 2 10^9 random numbers with the SSE2 skipping\n");
+  printf("         3 -- time generation of 2 10^9 random numbers with the AVX2 skipping\n");
   printf("         4 -- skip 10^9 states or 1*24*10^9 numbers with the scalar skipping\n");
   printf("         5 -- skip 10^9 states or 4*24*10^9 numbers with the SSE2 skipping\n");
   printf("         6 -- skip 10^9 states or 8*24*10^9 numbers with the AVX2 skipping\n");
   printf("         7 -- same seed for SIMD generators (consistency check)\n");
   printf("         8 -- perform self consistency test using LCG as a skipping engine\n");
   printf("              (random numbers are the same as in the original FORTRAN code)\n");
-  printf("         9 -- output stream of 64-bit random numbers. Filename required.\n");
-  printf("              Example: %s 6 >(PractRand-RNG_test stdin32 -tlmax 32T -multithreaded)\n", argv[0]);
+  printf("         9 -- output stream of 64-bit random numbers. Filename required. Uses the scalar skipping.\n");
+  printf("        10 -- output stream of 64-bit random numbers. Filename required. Uses the SSE2 skipping.\n");
+  printf("        11 -- output stream of 64-bit random numbers. Filename required. Uses the AVX2 skipping.\n");
+  printf("              Example: %s 11 >(PractRand-RNG_test stdin32 -tlmax 32T -multithreaded)\n", argv[0]);
 }
 
 int main(int argc, char **argv){
@@ -215,7 +238,13 @@ int main(int argc, char **argv){
     original_test<ranluxpp_James>();
   } else if(ntest == 9){
     if (argc !=3)  { usage(argc,argv); return 0;}
-    output_to_file(argv[2]);
+    output_to_file<ranluxI_scalar>(argv[2]);
+  } else if(ntest == 10){
+    if (argc !=3)  { usage(argc,argv); return 0;}
+    output_to_file<ranluxI_SSE>(argv[2]);
+  } else if(ntest == 11){
+    if (argc !=3)  { usage(argc,argv); return 0;}
+    output_to_file<ranluxI_AVX>(argv[2]);
   } else {
     usage(argc,argv);
   }

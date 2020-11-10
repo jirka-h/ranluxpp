@@ -38,7 +38,7 @@
 
 class ranluxI_scalar {
 protected:
-  uint32_t _x[24]; // state vector
+  uint32_t _x[24]; // state vector - only lower 24 bits are random!
   uint32_t _c;     // carry bit
   int _p;          // number of states to skip
   int _pos;        // current position in the state vector
@@ -53,7 +53,8 @@ public:
     return ((int32_t*)_x)[_pos++]*(1.0f/0x1p24f);
   }
   void getstate(uint32_t *x, uint32_t &c){
-    for(int i=0;i<24;i++) x[i] = _x[i]; c = _c;
+    for(int i=0;i<24;i++) x[i] = _x[i];
+    c = _c;
   }
   void nextstate_and_get_uint32_vector(uint32_t *x){
     int j;
@@ -70,7 +71,7 @@ public:
 
 class ranluxI_SSE {
 protected:
-  __m128i _x[24]; // state vector
+  __m128i _x[24]; // state vector - 4 parallel states with 32 bits, only lower 24 bits are random
   __m128i _c;     // carry bits
   int _p;         // number of states to skip
   int _pos;       // current position in the state vector
@@ -83,12 +84,26 @@ public:
     if(unlikely(_pos>=4*24)){_pos = 0; nextstate(_p);}
     return ((int32_t*)_x)[_pos++]*(1.0f/0x1p24f);
   }
+  //It returns 4x18 uint32
+  void nextstate_and_get_uint32_vector(uint32_t *x){
+    int j;
+    nextstate(_p);
+    j=0;
+    int32_t* _y;
+    _y = (int32_t*)_x;
+    for(int i=0;i<4*18;i+=3) {
+      x[i]   = (_y[j]<<8)    | (_y[j+1]>>16);
+      x[i+1] = (_y[j+1]<<16) | (_y[j+2]>>8);
+      x[i+2] = (_y[j+2]<<24) | (_y[j+3]);
+      j+=4;
+    }
+  }
 };
 
 #ifdef __AVX2__
 class ranluxI_AVX {
 protected:
-  __m256i _x[24]; // state vector
+  __m256i _x[24]; // state vector - 8 parallel states with 32 bits, only lower 24 bits are random
   __m256i _c;     // carry bits
   int _p;         // number of states to skip
   int _pos;       // current position in the state vector
@@ -100,6 +115,20 @@ public:
   float operator()(){
     if(unlikely(_pos>=8*24)){_pos = 0; nextstate(_p);}
     return ((int32_t*)_x)[_pos++]*(1.0f/0x1p24f);
+  }
+  //It returns 8x18 uint32
+  void nextstate_and_get_uint32_vector(uint32_t *x){
+    int j;
+    nextstate(_p);
+    j=0;
+    int32_t* _y;
+    _y = (int32_t*)_x;
+    for(int i=0;i<8*18;i+=3) {
+      x[i]   = (_y[j]<<8)    | (_y[j+1]>>16);
+      x[i+1] = (_y[j+1]<<16) | (_y[j+2]>>8);
+      x[i+2] = (_y[j+2]<<24) | (_y[j+3]);
+      j+=4;
+    }
   }
 };
 #endif

@@ -29,36 +29,60 @@
 #include <cxxabi.h>
 #include <signal.h>
 #include <inttypes.h>
+#include <chrono>
+using namespace std::chrono;
 
-// test the performance by summing up 10^9 float numbers
-// note the sum is always 2^24=16777216 for floats due to rounding errors
+// time generation of 2 10^9 random numbers
 template<typename T>
 void speedtest(){
   ranluxpp g1(3124);
-  int N = 1000*1000*1000;
-  T sum = 0;
+  size_t N = 2;
+  N = N * 1000 *1000 *1000;
   int status;
-  printf("Summing up %d %s type random numbers...\n",
+  T x;
+  printf("Generating %zu %s type random numbers...\n",
 	 N, abi::__cxa_demangle(typeid(T).name(), 0, 0, &status));
-  for(int i=0;i<N;i++) sum += g1(sum);
-  printf("sum=%lf\n", (double)(sum));
+  auto start = high_resolution_clock::now();
+  for(size_t i=0;i<N;i++) x = g1(x);
+  auto end = high_resolution_clock::now();
+  std::chrono::duration<double> diff = end-start;
+  double bytes;
+  if (std::is_same<float, T>::value) bytes=24.0/8.0;
+  if (std::is_same<double, T>::value) bytes=52.0/8.0;
+  printf("Time to generate %g GiB is %g s, speed is %g GiB/s, last generated number is %g\n",
+      ((double) N * bytes )/1024.0/1024.0/1024.0, diff.count(),
+      ((double) N * bytes )/1024.0/1024.0/1024.0/diff.count(), x);
 }
 
-// test the performance by summing up 10^9 float numbers
-// note the sum is always 2^24=16777216 for floats due to rounding errors
+// time generation of 2 10^9 random numbers
 template<typename T>
 void speedtest_array(){
   ranluxpp g1(3124);
-  int N = 1000*1000*10, M = 100;
-  T xs[M], sum = 0;
+  size_t N = 2;
+  N = N * 1000 *1000 *1000;
+  size_t M = 100;
+  N = N / M;
+  T xs[M], sum;
   int status;
-  printf("Summing up %d %s type random numbers from the array of size %d...\n",
+  printf("Generating %zu %s type random numbers from the array of size %zu...\n",
 	 N*M, abi::__cxa_demangle(typeid(T).name(), 0, 0, &status), M);
-  for (int i = 0; i < N; i++){
+  
+  auto start = high_resolution_clock::now();
+  for (size_t i = 0; i < N; i++){
     g1.getarray(M, xs);
-    for(int i=0;i<M;i++) sum += xs[i];
   }
-  printf("sum=%lf\n", (double)(sum));
+  auto end = high_resolution_clock::now();
+  std::chrono::duration<double> diff = end-start;
+
+  sum = 0.0;
+  for(size_t i=0;i<M;i++) sum += xs[i];
+
+  double bytes;
+  if (std::is_same<float, T>::value) bytes=24.0/8.0;
+  if (std::is_same<double, T>::value) bytes=52.0/8.0;
+  printf("Time to generate %g GiB is %g s, speed is %g GiB/s, sum of last %zu numbers is %g\n",
+      ((double) M * N * bytes)/1024.0/1024.0/1024.0, diff.count(),
+      ((double) M * N * bytes)/1024.0/1024.0/1024.0/diff.count(), M, sum);
 }
 
 void output_to_file(const char * filename) {
@@ -192,6 +216,7 @@ void compare_ranlux_0(){
 }
 
 void usage(int argc, char **argv){
+  (void) argc;
   printf("Program to test the performance of the Linear Congruential Generator with long integer modular multiplication.\n");
   printf("The generator produces the recurrent sequence:\n");
   printf("  x_{i+1} = A * x_{i} %% m\n");
@@ -205,10 +230,10 @@ void usage(int argc, char **argv){
   printf("              (the RANLUX generator sequence is transformed to LCG state and compared)\n");
   printf("         1 -- perform self consistency test\n");
   printf("              (the LCG state is transformed to RANLUX generator sequence and compared)\n");
-  printf("         2 -- sum of 10^9 float random numbers\n");
-  printf("         3 -- sum of 10^9 double random numbers\n");
-  printf("         4 -- sum of 10^9 float random numbers (array)\n");
-  printf("         5 -- sum of 10^9 double random numbers (array)\n");
+  printf("         2 -- time generation of 2 10^9 float random numbers\n");
+  printf("         3 -- time generation of 2 10^9 double random numbers\n");
+  printf("         4 -- time generation of 2 10^9 float random numbers (array)\n");
+  printf("         5 -- time generation of 2 10^9 double random numbers (array)\n");
   printf("         6 -- output stream of 64-bit random numbers. Filename required.\n");
   printf("              Example: %s 6 >(PractRand-RNG_test stdin64 -tlmax 32T -multithreaded)\n", argv[0]);
 }

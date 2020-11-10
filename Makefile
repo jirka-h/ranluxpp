@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -O3 -Iinc -mavx2
+CXXFLAGS = -O3 -Iinc -mavx2 -Wall -Wextra
 RLIB = libranlux++.a
 
 # use assembly optimized version of the skipping

@@ -42,7 +42,7 @@
 
 class ranluxpp {
 protected:
-  uint64_t _x[9]; // state vector
+  uint64_t _x[9]; // state vector - all 64 bits are random
   uint64_t _A[9]; // multiplier
   uint64_t _doubles[11]; // cache for double precision numbers 
   uint32_t _floats[24];  // cache for single precision numbers 
