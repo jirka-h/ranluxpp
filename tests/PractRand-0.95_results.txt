@@ -1,0 +1,85 @@
+{ time ./ranluxpp_test 6 >(../Test/PractRand-RNG_test stdin -tf 2 -tlmax 32T -multithreaded); } 2>&1 | tee ranluxpp_test.log
+
+
+PractRand-RNG_test using PractRand version 0.95
+RNG = RNG_stdin, seed = unknown
+test set = core, folding = extra
+
+rng=RNG_stdin, seed=unknown
+length= 512 megabytes (2^29 bytes), time= 3.4 seconds
+  no anomalies in 503 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 1 gigabyte (2^30 bytes), time= 9.8 seconds
+  no anomalies in 541 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 2 gigabytes (2^31 bytes), time= 20.8 seconds
+  no anomalies in 580 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 4 gigabytes (2^32 bytes), time= 39.5 seconds
+  no anomalies in 617 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 8 gigabytes (2^33 bytes), time= 73.7 seconds
+  no anomalies in 651 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 16 gigabytes (2^34 bytes), time= 139 seconds
+  no anomalies in 683 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 32 gigabytes (2^35 bytes), time= 267 seconds
+  no anomalies in 714 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 64 gigabytes (2^36 bytes), time= 517 seconds
+  no anomalies in 744 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 128 gigabytes (2^37 bytes), time= 1012 seconds
+  no anomalies in 774 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 256 gigabytes (2^38 bytes), time= 1999 seconds
+  no anomalies in 804 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 512 gigabytes (2^39 bytes), time= 3969 seconds
+  no anomalies in 833 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 1 terabyte (2^40 bytes), time= 7907 seconds
+  no anomalies in 862 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 2 terabytes (2^41 bytes), time= 15776 seconds
+  Test Name                         Raw       Processed     Evaluation
+  [Low1/64]BCFN(2+3,13-0,T)         R=  -9.8  p =1-2.8e-5   unusual          
+  ...and 888 test result(s) without anomalies
+
+rng=RNG_stdin, seed=unknown
+length= 4 terabytes (2^42 bytes), time= 31531 seconds
+  no anomalies in 913 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 8 terabytes (2^43 bytes), time= 63218 seconds
+  no anomalies in 935 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 16 terabytes (2^44 bytes), time= 127003 seconds
+  no anomalies in 956 test result(s)
+
+rng=RNG_stdin, seed=unknown
+length= 32 terabytes (2^45 bytes), time= 252950 seconds
+  no anomalies in 976 test result(s)
+
+fwrite: Broken pipe
+ERROR: fwrite - bytes written 24576, bytes to write 73728
+Total bytes written 35184372154368, 32768 GiB
+Selected code path is optimized for the Skylake CPU architecture.
+
+real	4215m54.823s
+user	21757m14.685s
+sys	350m57.857s
