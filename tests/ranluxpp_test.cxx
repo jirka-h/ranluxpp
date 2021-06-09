@@ -96,7 +96,7 @@ void output_to_file(const char * filename) {
     return;
   }
 
-  ranluxpp g1(3124);
+  ranluxpp g1(1);
 
   const int steps = 1024;
   const double giga=1073741824;

@@ -45,8 +45,8 @@ class ranluxpp {
 protected:
   uint64_t _x[9]; // state vector - all 64 bits are random
   uint64_t _A[9]; // multiplier
-  uint64_t _doubles[11]; // cache for double precision numbers 
-  uint32_t _floats[24];  // cache for single precision numbers 
+  uint64_t _doubles[11]; // cache for double precision numbers
+  uint32_t _floats[24];  // cache for single precision numbers
   uint32_t _dpos; // position in cache for doubles
   uint32_t _fpos; // position in cache for floats
 
@@ -55,19 +55,19 @@ protected:
 
   // fill the cache with float type numbers
   void nextfloats();
-  
+
   // fill the cache with double type numbers
   void nextdoubles();
-  
-  // transfrom the binary state vector of LCG to 24 floats 
+
+  // transfrom the binary state vector of LCG to 24 floats
   void unpackfloats(float *a);
-  
+
   // transfrom the binary state vector of LCG to 11 doubles
   void unpackdoubles(double *d);
 public:
   // The LCG constructor:
   // seed -- jump to the state x_seed = x_0 * A^(2^96 * seed) mod m
-  // p    -- the exponent of to get the multiplier A = a^p mod m 
+  // p    -- the exponent of to get the multiplier A = a^p mod m
   ranluxpp(uint64_t seed, uint64_t p);
   ranluxpp(uint64_t seed) : ranluxpp(seed, 2048){}
 
@@ -79,7 +79,7 @@ public:
 
   // seed the generator by
   // jumping to the state x_seed = x_0 * A^(2^96 * seed) mod m
-  // the scheme guarantees non-colliding sequences 
+  // the scheme guarantees non-colliding sequences
   void init(unsigned long int seed);
 
   // set the multiplier A to A = a^2048 + 13, a primitive element modulo
