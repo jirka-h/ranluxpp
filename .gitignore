@@ -1,0 +1,5 @@
+**.o
+ranlux_test
+ranluxpp_test
+libranlux++.a
+std_random_test

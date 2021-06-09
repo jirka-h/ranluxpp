@@ -22,6 +22,7 @@
 #include "ranluxpp.h"
 #include "mulmod.h"
 #include <stdio.h>
+#include <inttypes.h>
 
 // modular exponentiation:
 // x <- x^n mod (2^576 - 2^240 + 1)
@@ -184,3 +185,14 @@ void ranluxpp::setskip(uint64_t n){
   for(int i=0;i<9;i++) _A[i] = geta()[i];
   powmod(_A, n);
 }
+
+// print state
+void ranluxpp::print_state(FILE *stream) {
+  for (int i=0; i<9; ++i) {
+    fprintf(stream, "x[%d]\t%016" PRIx64 "\n", i, _x[i]);
+  }
+  for (int i=0; i<9; ++i) {
+    fprintf(stream, "A[%d]\t%016" PRIx64 "\n", i, _A[i]);
+  }
+}
+

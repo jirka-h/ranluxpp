@@ -66,7 +66,7 @@ void speedtest_array(){
   int status;
   printf("Generating %zu %s type random numbers from the array of size %zu...\n",
 	 N*M, abi::__cxa_demangle(typeid(T).name(), 0, 0, &status), M);
-  
+
   auto start = high_resolution_clock::now();
   for (size_t i = 0; i < N; i++){
     g1.getarray(M, xs);
@@ -87,7 +87,7 @@ void speedtest_array(){
 
 void output_to_file(const char * filename) {
 
-  signal(SIGPIPE, SIG_IGN); 
+  signal(SIGPIPE, SIG_IGN);
 
   FILE * stream;
   stream = fopen (filename,"w");
@@ -96,7 +96,8 @@ void output_to_file(const char * filename) {
     return;
   }
 
-  ranluxpp g1(3124);
+  ranluxpp g1(1);
+
   const int steps = 1024;
   const double giga=1073741824;
   const size_t N = 9 * steps;
@@ -108,9 +109,10 @@ void output_to_file(const char * filename) {
   for(;;) {
     p=buf;
     for (int i=0;i<steps;++i) {
-      g1.nextstate();
+      //g1.print_state(stderr);
       memcpy(p, g1.getstate(), 9*sizeof(uint64_t));
       p+=9;
+      g1.nextstate();
     }
     rc = fwrite(buf, sizeof(uint64_t), N, stream);
     total += rc;

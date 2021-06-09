@@ -34,6 +34,7 @@
  * i.e. a * b mod m = 1                                                  *
  *************************************************************************/
 #include <stdint.h>
+#include <stdio.h>
 
 #pragma once
 
@@ -113,6 +114,9 @@ public:
 
   // set skip factor to emulate RANLUX behaviour
   void setskip(uint64_t n);
+
+  // print state
+  void print_state(FILE *stream);
 };
 
 // transform the LCG state to a corresponding subtract-with-borrow sequence
